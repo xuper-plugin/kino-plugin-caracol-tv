@@ -373,7 +373,13 @@ async function vodPlayable(contentId, assetId) {
   if (!src) throw new Error("Caracol no devolvió una URL de video para " + contentId);
   const drm = { type: "widevine", licenseUrl: LICENSE, licenseHeaders: {} };
   if (r.token) drm.licenseHeaders.Cookie = COOKIE_TOKEN + "=" + r.token;
-  return { url: src, mime: "application/dash+xml", drm };
+  // Headers Required por el CDN en TODA request (manifest, segmentos y licencia): sin ellos el server
+  // responde HTML/403 aunque el .mpd sea válido. El SDK del plugin solo adjunta `headers` en cada
+  // request del Stream, y `licenseHeaders` solo en la licencia -- mandamos ambos grupos en `headers`
+  // para que viajen en todo.
+  const streamHeaders = { ...REQUEST_HEADERS };
+  if (r.token) streamHeaders.Cookie = COOKIE_TOKEN + "=" + r.token;
+  return { url: src, mime: "application/dash+xml", drm, headers: streamHeaders };
 }
 
 export async function resolve(ref) {
@@ -426,7 +432,11 @@ async function livePlayable(channelId, assetId, name) {
   if (!src) throw new Error("Caracol no devolvió una URL de video para " + name);
   const drm = { type: "widevine", licenseUrl: LICENSE, licenseHeaders: {} };
   if (r.token) drm.licenseHeaders.Cookie = COOKIE_TOKEN + "=" + r.token;
-  return { url: src, mime: "application/dash+xml", drm };
+  // Mismo motivo que en [vodPlayable]: el CDN de Caracol exige `restful: yes`, `User-Agent` y la
+  // cookie `playback_token` en cada request, no solo en la licencia.
+  const streamHeaders = { ...REQUEST_HEADERS };
+  if (r.token) streamHeaders.Cookie = COOKIE_TOKEN + "=" + r.token;
+  return { url: src, mime: "application/dash+xml", drm, headers: streamHeaders };
 }
 
 export async function liveCategories() {
