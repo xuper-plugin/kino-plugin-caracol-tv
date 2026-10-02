@@ -1,0 +1,28 @@
+{
+  "id": "caracol-tv",
+  "name": "Caracol TV",
+  "version": "1.0.0",
+  "apiVersion": 4,
+  "entry": "plugin.js",
+  "description": "Series, películas y canales en vivo de Caracol Streaming. Solo funciona en Colombia.",
+  "author": "kinotvapp",
+  "homepage": "https://github.com/kinotvapp/kino-light",
+  "hosts": [
+    "middleware.ditu.caracoltv.com",
+    "image-registry.ditu.caracoltv.com",
+    "image-registry.avscaracoltv.com"
+  ],
+  "liveStreamHosts": "any",
+  "streamHosts": "any",
+  "capabilities": [
+    "search",
+    "home",
+    "browse",
+    "episodes",
+    "resolve",
+    "drm",
+    "channels"
+  ],
+  "color": "#66BB6A",
+  "settings": []
+}

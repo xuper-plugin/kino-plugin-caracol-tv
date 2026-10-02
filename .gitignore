@@ -1,0 +1,4 @@
+# Local stand-ins del kit; nunca comitear un valor de secreto real.
+.kino-storage.json
+.kino-cookies.json
+.kino-secrets.json
