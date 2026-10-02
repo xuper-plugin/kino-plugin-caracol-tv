@@ -6,7 +6,8 @@
   "entry": "plugin.js",
   "description": "Series, películas y canales en vivo de Caracol Streaming. Solo funciona en Colombia.",
   "author": "kinotvapp",
-  "homepage": "https://github.com/kinotvapp/kino-light",
+  "homepage": "https://github.com/xuper-plugin/kino-plugin-caracol-tv",
+  "icon": "icon.png",
   "hosts": [
     "middleware.ditu.caracoltv.com",
     "image-registry.ditu.caracoltv.com",
