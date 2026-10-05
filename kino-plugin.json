@@ -1,7 +1,7 @@
 {
   "id": "caracol-tv",
   "name": "Caracol TV",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "apiVersion": 4,
   "entry": "plugin.js",
   "description": "Series, películas y canales en vivo de Caracol Streaming. Solo funciona en Colombia.",

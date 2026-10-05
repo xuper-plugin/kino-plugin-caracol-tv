@@ -61,7 +61,12 @@ function api(path, params = {}) {
 /** GET a BASE; lanza Error con mensaje legible si algo falla. */
 async function get(path, params = {}) {
   const r = await kino.fetch(api(path, params), { headers: { ...REQUEST_HEADERS } });
-  if (!r.ok) throw new Error("Caracol respondió " + r.status + " en " + path);
+  if (!r.ok) {
+    const err = new Error("Caracol respondió " + r.status + " en " + path);
+    // Fuera de Colombia la API entera responde 403 (bloqueo geográfico): no es una falla del plugin.
+    err.outsideColombia = r.status === 403;
+    throw err;
+  }
   return r.json();
 }
 
@@ -188,6 +193,7 @@ export async function search(query) {
   try {
     items = await searchCatalog(query.q);
   } catch (e) {
+    if (e.outsideColombia) return { items: [] };
     log("search failed", e.message);
     throw e;
   }
@@ -197,7 +203,14 @@ export async function search(query) {
 const ROW_PAGES = 60;
 
 export async function home() {
-  const titles = await cachedCatalog(false);
+  let titles;
+  try {
+    titles = await cachedCatalog(false);
+  } catch (e) {
+    // Fuera de Colombia no hay nada que mostrar: sin filas, en vez de un error en el Home.
+    if (e.outsideColombia) return [];
+    throw e;
+  }
   const series = titles.filter((t) => t.kind === "series").slice(0, ROW_PAGES);
   const movies = titles.filter((t) => t.kind === "movie").slice(0, ROW_PAGES);
   const rows = [];
