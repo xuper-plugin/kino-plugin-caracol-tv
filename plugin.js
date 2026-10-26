@@ -37,6 +37,16 @@ function log(...args) {
   }
 }
 
+/**
+ * Un Error simple llega al tablero de errores como "thrown" sin mensaje ni clase; un kino.error conserva ambos. Los de kino.fetch ya
+ * traen `code` (network, timeout) y pasan tal cual.
+ */
+function fail(e, where) {
+  log(where + " failed", e && e.message);
+  if (e && e.code) return e;
+  return kino.error("unavailable", String((e && e.message) || e).slice(0, 180), { userMessage: "Caracol no responde ahora. Inténtalo de nuevo en un rato." });
+}
+
 // ---------- helpers de bajo nivel (ref, JSON, imágenes) ------------------------------
 
 /** "cditu1:<contentType>:<contentId>" — contentId al final para que pueda llevar ":" sin problema. */
@@ -175,7 +185,11 @@ async function cachedCatalog(force = false) {
   }
   if (!force && entry && entry.expiresAt > Date.now() && Array.isArray(entry.titles)) return entry.titles;
   const titles = await fullCatalog();
-  kino.storage.set("catalog", JSON.stringify({ titles, expiresAt: Date.now() + CATALOG_TTL_MS }));
+  try {
+    kino.storage.set("catalog", JSON.stringify({ titles, expiresAt: Date.now() + CATALOG_TTL_MS }));
+  } catch (e) {
+    log("catalog not cached", e && e.message); // a full storage (256 KB) must not break Home: the catalog is simply asked again
+  }
   return titles;
 }
 
@@ -194,8 +208,7 @@ export async function search(query) {
     items = await searchCatalog(query.q);
   } catch (e) {
     if (e.outsideColombia) return { items: [] };
-    log("search failed", e.message);
-    throw e;
+    throw fail(e, "search");
   }
   return { items: items.map((t) => ({ ...t, badges: [REGION_BADGE] })) };
 }
@@ -209,7 +222,7 @@ export async function home() {
   } catch (e) {
     // Fuera de Colombia no hay nada que mostrar: sin filas, en vez de un error en el Home.
     if (e.outsideColombia) return [];
-    throw e;
+    throw fail(e, "home");
   }
   const series = titles.filter((t) => t.kind === "series").slice(0, ROW_PAGES);
   const movies = titles.filter((t) => t.kind === "movie").slice(0, ROW_PAGES);
@@ -453,7 +466,7 @@ async function livePlayable(channelId, assetId, name) {
 }
 
 export async function liveCategories() {
-  return { categories: [{ id: "all", title: "Canales en vivo" }], playlists: [] };
+  return [{ id: "all", title: "Canales en vivo", country: "CO" }];
 }
 
 export async function liveChannels({ categoryId, cursor }) {
